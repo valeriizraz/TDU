@@ -46,7 +46,7 @@
 
     form.insertAdjacentHTML('afterbegin', `
       <label class="form-group me-3 mb-0" for="task">
-        <input type="text" id="task" class="form-control required"
+        <input type="text" id="task" class="form-control" required
           name="task" placeholder="ввести задачу">
       </label>
     `);
@@ -106,12 +106,29 @@
     };
   };
 
+  const getcount = () => {
+    let num = 1;
+
+    return function() {
+      return num++;
+    };
+  };
+
+  const getListCount = () => {
+    const listCountArr = document.querySelectorAll('.num-item');
+    const count = getcount();
+
+    for (const elem of listCountArr) {
+      elem.textContent = count();
+    }
+  };
+
   const createRow = ({task}) => {
     const tr = document.createElement('tr');
     tr.classList.add('table-light');
 
     const tdNum = document.createElement('td');
-    tdNum.textContent = 'N';
+    tdNum.classList.add('num-item');
 
     const tdTask = document.createElement('td');
     tdTask.classList.add('task');
@@ -201,21 +218,37 @@
 
       const formData = new FormData(e.target);
       const newTask = Object.fromEntries(formData);
+      console.log(newTask);
 
       addLocalList(newTask, userName);
       addTaskPage(newTask, list);
+      getListCount();
 
       form.reset();
     });
   };
 
-  const listBtnControl = (list) => {
+  const delLocalTask = (num, userName) => {
+    const local = localStorage.getItem(userName);
+    const localParse = JSON.parse(local);
+    console.log(localParse);
+    localParse.splice(num - 1, 1);
+    console.log(localParse);
+
+    localStorage.setItem(userName, JSON.stringify(localParse));
+  };
+
+  const listBtnControl = (list, userName) => {
     list.addEventListener('click', (e) => {
       const target = e.target;
 
       if (target.closest('.btn-danger')) {
+        const rowNum = target.closest('.table-light').childNodes[0].textContent;
+        console.log(rowNum);
+        delLocalTask(rowNum, userName);
+
         target.closest('.table-light').remove();
-        console.log('go');
+        getListCount();
       }
 
       if (target.closest('.btn-success')) {
@@ -239,8 +272,11 @@
 
     printLocalList(list, userName);
     formControl(form, list, userName);
-    listBtnControl(list);
+    listBtnControl(list, userName);
+    getListCount();
   };
 
   window.todoInit = init;
 }
+
+
